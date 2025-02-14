@@ -1,7 +1,9 @@
 import { html } from "lighterhtml";
 import settings from "../settings.json";
 
-export const renderFooter = html.node`<footer class="footer">
+export const renderFooter = html.node`
+`;
+<footer class="footer">
   <div class="tagline">
     <b>Glitch in Bio</b><br />
     Your links, your way.
@@ -18,4 +20,3 @@ export const renderFooter = html.node`<footer class="footer">
     Get your own free page
   </a>
 </footer>
-`;
