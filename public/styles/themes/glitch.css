@@ -46,7 +46,10 @@ ul.link-list li a:hover, ul.link-list li a:focus {
   background: var(--color-primary);
 }
 ul.link-list li a img {
-  display: none;
+  display: block;  
+  width: 70px;  
+  height: 70px; 
+  object-fit: contain;  
 }
 
 .social-profile-icon path {
