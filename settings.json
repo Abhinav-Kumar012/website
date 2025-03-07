@@ -1,7 +1,7 @@
 {
-  "metaTitle": "Abhinav's links",
-  "metaDescription": "Hi I'm a student at IIITB",
-  "name": "Abhinav Kumar",
+  "metaTitle": "Abhinav Kumar's website",
+  "metaDescription": "Hi, I'm Abhinav Kumar, a student from IIITB. Here is my website for my various profiles and resume.",
+  "name": "Hi I'm Abhinav Kumar",
   "theme": "glitch",
   "avatarImage": "https://cdn.glitch.global/5f96b627-6eea-408d-afe5-da809f7ea7b7/ak.png?v=1739507763340",
   "links": [
@@ -13,6 +13,11 @@
     {
       "url": "https://github.com/Abhinav-Kumar012",
       "text": "My github",
+      "img": "https://cdn.glitch.global/5f96b627-6eea-408d-afe5-da809f7ea7b7/github-mark.png?v=1739508491008"
+    },
+    {
+      "url": "https://github.com/Abhinav-Kumar012/resume/releases/download/latest/Resume.pdf",
+      "text": "My Resume",
       "img": "https://cdn.glitch.global/5f96b627-6eea-408d-afe5-da809f7ea7b7/github-mark.png?v=1739508491008"
     }
   ],
