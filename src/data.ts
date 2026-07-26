@@ -16,7 +16,7 @@ export const profile = {
   handle: "Abhinav-Kumar012",
   role: "Software & Systems Engineer",
   tagline:
-    "Integrated M.Tech CS student at IIIT Bangalore and Software Engineer Intern at Arista Networks — building performant, reliable systems across distributed microservices, databases and machine learning in Rust, Java, Python & C.",
+    "Integrated M.Tech CS student at IIIT Bangalore and Software Engineer Intern at Arista Networks building performant, reliable systems across distributed microservices, databases and machine learning in Rust, Java, Python & C.",
   location: "Bengaluru, India",
   email: "Abhinav.Kumar@iiitb.ac.in",
   phone: "+91 6203642937",

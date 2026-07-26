@@ -270,6 +270,10 @@ const marqueeItems = [
   "Transformers",
   "gRPC",
   "Performance Engineering",
+  "Ocaml",
+  "C++",
+  "Java",
+  "Linux",
 ];
 
 function Marquee() {
