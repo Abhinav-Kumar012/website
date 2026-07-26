@@ -7,10 +7,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
 *.local
+
+# Environment variables (CRITICAL: Prevents leaking secrets)
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -22,5 +28,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Project specific
 .vite-source-tags.js
 .vercel
+.eslintcache
