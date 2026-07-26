@@ -1,46 +1,35 @@
 {
-  "name": "glitch-in-bio",
-  "version": "1.0.3",
-  "description": "Your very own link-in-bio app.",
-  "main": "index.html",
+  "name": "placeholder-model-2",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "vite",
-    "build": "vite build",
-    "serve": "vite preview",
-    "release": "auto shipit"
-  },
-  "devDependencies": {
-    "@auto-it/all-contributors": "^10.32.2",
-    "@auto-it/first-time-contributor": "^10.32.2",
-    "@auto-it/git-tag": "^10.32.3",
-    "@auto-it/released": "^10.32.2",
-    "auto": "^10.32.2",
-    "vite": "^4.4.9"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead"
-  ],
-  "engines": {
-    "node": "14.x"
-  },
-  "repository": {
-    "url": "https://glitch.com/edit/#!/glitch-in-bio"
-  },
-  "glitch": {
-    "projectType": "generated_static"
-  },
-  "author": "Keith Kurson <keith@glitch.com>",
-  "auto": {
-    "plugins": [
-      "all-contributors",
-      "first-time-contributor",
-      "released",
-      "git-tag"
-    ],
-    "onlyPublishWithReleaseLabel": true
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "lighterhtml": "^4.2.0"
+    "@tailwindcss/vite": "^4.2.1",
+    "framer-motion": "^12.35.0",
+    "lucide-react": "^0.577.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.13.1",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^7.3.1"
   }
 }
