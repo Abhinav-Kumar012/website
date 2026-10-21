@@ -1,4 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  AnimatePresence,
+  MotionConfig,
+  motion,
+} from "framer-motion";
 import {
   Github,
   FileDown,
@@ -17,11 +22,14 @@ import {
   Briefcase,
   GraduationCap,
   Phone,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
 import {
   profile,
   skills,
   projects,
+  demos,
   categoryOrder,
   langColors,
   experience,
@@ -29,50 +37,65 @@ import {
   coursework,
   type Project,
 } from "./data";
+import { useActiveSection, useCountUp, usePrefersReducedMotion, useReveal } from "./hooks";
+import {
+  BackToTop,
+  CursorGlow,
+  LocalClock,
+  ScrollProgress,
+  TiltCard,
+} from "./motion";
+import { riseItem, staggerParent, wordItem } from "./variants";
 
 const catIcon: Record<string, typeof Cpu> = {
   "Systems & Backend": Cpu,
-  "Machine Learning & NLP": BrainCircuit,
+  "Machine Learning & AI": BrainCircuit,
   "Languages & Compilers": Braces,
   "Data & Databases": Database,
   "Learning & Writing": BookOpen,
 };
 
-function useReveal() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          setShown(true);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.12 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return { ref, shown };
+const NAV_LINKS = [
+  { label: "About", href: "#about" },
+  { label: "Experience", href: "#experience", hideOnMobile: true },
+  { label: "Skills", href: "#skills" },
+  { label: "Work", href: "#work" },
+  { label: "Demos", href: "#demos", hideOnMobile: true },
+  { label: "Contact", href: "#contact" },
+];
+
+const NAV_IDS = NAV_LINKS.map((l) => l.href.slice(1));
+
+function Eyebrow({ children }: { children: ReactNode }) {
+  return (
+    <p
+      className="font-mono text-xs tracking-widest uppercase mb-4 flex items-center gap-2.5"
+      style={{ color: "var(--teal)" }}
+    >
+      <span
+        className="inline-block w-6 h-px shrink-0"
+        style={{ background: "var(--teal)" }}
+      />
+      {children}
+    </p>
+  );
 }
+
+/* ------------------------------------------------------------------ */
+/* Navigation                                                          */
+/* ------------------------------------------------------------------ */
 
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const active = useActiveSection(NAV_IDS);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-  const links = [
-    { label: "About", href: "#about" },
-    { label: "Experience", href: "#experience" },
-    { label: "Skills", href: "#skills" },
-    { label: "Work", href: "#work" },
-    { label: "Contact", href: "#contact" },
-  ];
+
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
@@ -84,7 +107,7 @@ function Nav() {
       <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
         <a href="#top" className="flex items-center gap-2 group">
           <span
-            className="grid place-items-center w-9 h-9 rounded-lg border border-[#2c3342] text-amber font-mono text-sm font-bold"
+            className="grid place-items-center w-9 h-9 rounded-lg border border-[#2c3342] text-amber font-mono text-sm font-bold transition-colors group-hover:border-[#4a5468]"
             style={{ color: "var(--amber)" }}
           >
             AK
@@ -93,16 +116,32 @@ function Nav() {
             ~/abhinav-kumar
           </span>
         </a>
-        <nav className="flex items-center gap-1 sm:gap-2">
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="px-3 py-2 text-sm text-[#b7c0d0] hover:text-white transition-colors rounded-md hover:bg-white/5"
-            >
-              {l.label}
-            </a>
-          ))}
+
+        <nav className="flex items-center gap-0.5 sm:gap-1">
+          {NAV_LINKS.map((l) => {
+            const id = l.href.slice(1);
+            const on = active === id;
+            return (
+              <a
+                key={l.href}
+                href={l.href}
+                data-active={on}
+                className={`relative px-2 sm:px-3 py-2 text-sm transition-colors rounded-md hover:bg-white/5 ${
+                  l.hideOnMobile ? "hidden sm:inline" : ""
+                } ${on ? "text-white" : "text-[#b7c0d0] hover:text-white"}`}
+              >
+                {l.label}
+                {on && (
+                  <motion.span
+                    layoutId="nav-active"
+                    className="absolute inset-x-2 -bottom-0.5 h-px"
+                    style={{ background: "var(--amber)" }}
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </a>
+            );
+          })}
           <a
             href={profile.resumePdf}
             target="_blank"
@@ -115,7 +154,147 @@ function Nav() {
           </a>
         </nav>
       </div>
+
+      <ScrollProgress className="absolute bottom-0 left-0 h-[2px] w-full bg-gradient-to-r from-[#f0a640] via-[#e0703b] to-[#3fd0c9]" />
     </header>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Hero                                                                */
+/* ------------------------------------------------------------------ */
+
+type TerminalLine = { k: string; v: string; raw?: boolean };
+
+const TERMINAL_LINES: TerminalLine[] = [
+  { k: "school", v: "IIIT Bangalore" },
+  { k: "intern", v: "Arista Networks" },
+  { k: "langs", v: '["Java","Python","C","Rust"]', raw: true },
+  { k: "building", v: "true", raw: true },
+];
+
+function terminalLineText(line: TerminalLine, isLast: boolean) {
+  return `  "${line.k}": ${line.raw ? line.v : `"${line.v}"`}${isLast ? "" : ","}`;
+}
+
+function TerminalCard() {
+  const reduced = usePrefersReducedMotion();
+  const [state, setState] = useState({ lineIdx: 0, charIdx: 0 });
+
+  // Reduced motion: render the finished block straight away, no typing.
+  const lineIdx = reduced ? TERMINAL_LINES.length : state.lineIdx;
+  const charIdx = reduced ? Number.MAX_SAFE_INTEGER : state.charIdx;
+
+  useEffect(() => {
+    if (reduced) return;
+    if (lineIdx >= TERMINAL_LINES.length) return;
+
+    const line = TERMINAL_LINES[lineIdx];
+    const total = terminalLineText(
+      line,
+      lineIdx === TERMINAL_LINES.length - 1
+    ).length;
+
+    if (charIdx >= total) {
+      const t = window.setTimeout(() => {
+        setState((s) => ({ lineIdx: s.lineIdx + 1, charIdx: 0 }));
+      }, 260);
+      return () => window.clearTimeout(t);
+    }
+
+    const t = window.setTimeout(
+      () => setState((s) => ({ ...s, charIdx: s.charIdx + 1 })),
+      26
+    );
+    return () => window.clearTimeout(t);
+  }, [lineIdx, charIdx, reduced]);
+
+  const done = lineIdx >= TERMINAL_LINES.length;
+
+  return (
+    <div className="rounded-xl border border-[#2c3342] bg-[#14171f] shadow-2xl overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-[#2c3342] bg-[#191d27]">
+        <span className="w-3 h-3 rounded-full bg-[#e0703b]" />
+        <span className="w-3 h-3 rounded-full bg-[#f0a640]" />
+        <span className="w-3 h-3 rounded-full bg-[#b6e04a]" />
+        <span className="ml-2 font-mono text-xs text-[#7c879a]">whoami.sh</span>
+        <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[10px] text-[#4a5468]">
+          <span
+            className="w-1.5 h-1.5 rounded-full animate-pulse"
+            style={{ background: "var(--lime)" }}
+          />
+          {done ? "idle" : "running"}
+        </span>
+      </div>
+
+      <div className="p-5 font-mono text-[13px] leading-relaxed">
+        <p className="text-[#7c879a]">
+          <span style={{ color: "var(--teal)" }}>$</span> cat profile.json
+        </p>
+
+        <div className="mt-2">
+          {TERMINAL_LINES.map((line, i) => {
+            const isLast = i === TERMINAL_LINES.length - 1;
+            const keyEnd = line.k.length + 6;
+            let content: ReactNode = null;
+
+            if (i < lineIdx) {
+              content = (
+                <>
+                  <span className="text-[#7c879a]">{"  "}</span>
+                  <span style={{ color: "var(--amber)" }}>
+                    "{line.k}":{" "}
+                  </span>
+                  <span>{line.raw ? line.v : `"${line.v}"`}</span>
+                </>
+              );
+            } else if (i === lineIdx) {
+              const typed = terminalLineText(line, isLast).slice(0, charIdx);
+              const keyPart = typed.slice(0, keyEnd);
+              const valPart = typed.slice(keyEnd);
+              content = (
+                <>
+                  <span className="text-[#7c879a]">{keyPart.slice(0, 2)}</span>
+                  <span style={{ color: "var(--amber)" }}>{keyPart.slice(2)}</span>
+                  <span>{valPart}</span>
+                  <span
+                    className="inline-block w-2 h-3.5 ml-0.5 align-middle animate-blink"
+                    style={{ background: "var(--lime)" }}
+                  />
+                </>
+              );
+            }
+
+            return (
+              <div
+                key={line.k}
+                className="min-h-[1.4rem] transition-opacity duration-300"
+                style={{ opacity: i > lineIdx ? 0 : 1 }}
+              >
+                {content}
+              </div>
+            );
+          })}
+        </div>
+
+        <AnimatePresence>
+          {done && (
+            <motion.p
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="mt-3 text-[#7c879a]"
+            >
+              <span style={{ color: "var(--teal)" }}>$</span> {" "}
+              <span
+                className="inline-block w-2 h-4 ml-0.5 align-middle animate-blink"
+                style={{ background: "var(--lime)" }}
+              />
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }
 
@@ -130,15 +309,14 @@ function Hero() {
         <div
           className="absolute -top-40 -right-32 w-[42rem] h-[42rem] rounded-full blur-3xl opacity-25 animate-float-slow"
           style={{
-            background:
-              "radial-gradient(circle, var(--rust), transparent 62%)",
+            background: "radial-gradient(circle, var(--rust), transparent 62%)",
           }}
         />
         <div
-          className="absolute top-40 -left-40 w-[36rem] h-[36rem] rounded-full blur-3xl opacity-20"
+          className="absolute top-40 -left-40 w-[36rem] h-[36rem] rounded-full blur-3xl opacity-20 animate-float-slow"
           style={{
-            background:
-              "radial-gradient(circle, var(--teal), transparent 62%)",
+            background: "radial-gradient(circle, var(--teal), transparent 62%)",
+            animationDelay: "-4.5s",
           }}
         />
         <div
@@ -152,37 +330,54 @@ function Hero() {
       </div>
 
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
-        <div className="grid lg:grid-cols-[1.6fr_1fr] gap-12 items-center">
+        <motion.div
+          className="grid lg:grid-cols-[1.6fr_1fr] gap-12 items-center"
+          variants={staggerParent}
+          initial="hidden"
+          animate="show"
+        >
           <div>
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#2c3342] bg-[#191d27]/60 text-xs font-mono text-[#b7c0d0] mb-7 fade-up"
-              style={{ animationDelay: "0.05s" }}
+            <motion.div
+              variants={riseItem}
+              className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full border border-[#2c3342] bg-[#191d27]/60 text-xs font-mono text-[#b7c0d0] mb-7"
             >
-              <span className="w-2 h-2 rounded-full" style={{ background: "var(--lime)" }} />
-              Open to systems / ML engineering roles
-            </div>
-
-            <h1
-              className="font-display text-[3.1rem] leading-[0.98] sm:text-7xl font-semibold text-cream fade-up"
-              style={{ animationDelay: "0.12s" }}
-            >
-              Abhinav
-              <br />
-              <span className="italic" style={{ color: "var(--amber)" }}>
-                Kumar
+              <span className="relative grid place-items-center w-2 h-2 shrink-0">
+                <span
+                  className="pulse-ring w-2 h-2 rounded-full"
+                  style={{ background: "var(--lime)", color: "var(--lime)" }}
+                />
               </span>
-            </h1>
+              Open to systems / ML engineering roles
+            </motion.div>
 
-            <p
-              className="mt-6 text-lg sm:text-xl text-[#b7c0d0] max-w-xl leading-relaxed fade-up"
-              style={{ animationDelay: "0.2s" }}
+            <motion.h1
+              className="font-display text-[3.1rem] leading-[0.98] sm:text-7xl font-semibold text-cream"
+              variants={staggerParent}
+              initial="hidden"
+              animate="show"
+            >
+              <motion.span variants={wordItem} className="block">
+                Abhinav
+              </motion.span>
+              <motion.span
+                variants={wordItem}
+                className="block italic"
+                style={{ color: "var(--amber)" }}
+              >
+                Kumar
+              </motion.span>
+            </motion.h1>
+
+            <motion.p
+              variants={riseItem}
+              className="mt-6 text-lg sm:text-xl text-[#b7c0d0] max-w-xl leading-relaxed"
             >
               {profile.tagline}
-            </p>
+            </motion.p>
 
-            <div
-              className="mt-8 flex flex-wrap items-center gap-3 fade-up"
-              style={{ animationDelay: "0.28s" }}
+            <motion.div
+              variants={riseItem}
+              className="mt-8 flex flex-wrap items-center gap-3"
             >
               <a
                 href="#work"
@@ -199,11 +394,11 @@ function Hero() {
               >
                 <Github size={17} /> GitHub
               </a>
-            </div>
+            </motion.div>
 
-            <div
-              className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-[#7c879a] fade-up"
-              style={{ animationDelay: "0.36s" }}
+            <motion.div
+              variants={riseItem}
+              className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-[#7c879a]"
             >
               <span className="inline-flex items-center gap-1.5">
                 <MapPin size={15} /> {profile.location}
@@ -214,48 +409,21 @@ function Hero() {
               <span className="inline-flex items-center gap-1.5 font-mono">
                 @{profile.handle}
               </span>
-            </div>
+            </motion.div>
           </div>
 
-          {/* terminal card */}
-          <div
-            className="fade-up"
-            style={{ animationDelay: "0.3s" }}
-          >
-            <div className="rounded-xl border border-[#2c3342] bg-[#14171f] shadow-2xl overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-[#2c3342] bg-[#191d27]">
-                <span className="w-3 h-3 rounded-full bg-[#e0703b]" />
-                <span className="w-3 h-3 rounded-full bg-[#f0a640]" />
-                <span className="w-3 h-3 rounded-full bg-[#b6e04a]" />
-                <span className="ml-2 font-mono text-xs text-[#7c879a]">
-                  whoami.sh
-                </span>
-              </div>
-              <div className="p-5 font-mono text-[13px] leading-relaxed">
-                <p className="text-[#7c879a]">
-                  <span style={{ color: "var(--teal)" }}>$</span> cat profile.json
-                </p>
-                <pre className="mt-2 text-[#b7c0d0] whitespace-pre-wrap">
-{`{
-  `}<span style={{ color: "var(--amber)" }}>"school"</span>{`: "IIIT Bangalore",
-  `}<span style={{ color: "var(--amber)" }}>"intern"</span>{`: "Arista Networks",
-  `}<span style={{ color: "var(--amber)" }}>"langs"</span>{`: ["Java","Python",
-            "C","Rust"],
-  `}<span style={{ color: "var(--amber)" }}>"building"</span>{`: true
-}`}
-                </pre>
-                <p className="mt-3 text-[#7c879a]">
-                  <span style={{ color: "var(--teal)" }}>$</span> _
-                  <span className="inline-block w-2 h-4 ml-0.5 align-middle animate-pulse" style={{ background: "var(--lime)" }} />
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+          <motion.div variants={riseItem}>
+            <TerminalCard />
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Marquee                                                             */
+/* ------------------------------------------------------------------ */
 
 const marqueeItems = [
   "Rust",
@@ -278,8 +446,8 @@ const marqueeItems = [
 
 function Marquee() {
   return (
-    <div className="relative py-5 border-y border-[#2c3342] bg-[#14171f] overflow-hidden">
-      <div className="flex whitespace-nowrap animate-marquee">
+    <div className="relative py-5 border-y border-[#2c3342] bg-[#14171f] overflow-hidden marquee-mask">
+      <div className="flex whitespace-nowrap animate-marquee marquee-track">
         {[...marqueeItems, ...marqueeItems].map((t, i) => (
           <span
             key={i}
@@ -294,6 +462,68 @@ function Marquee() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* About                                                               */
+/* ------------------------------------------------------------------ */
+
+const aboutStats = [
+  { value: 46, suffix: "+", label: "Repositories" },
+  { value: 8, suffix: "", label: "Languages" },
+  { value: 50, suffix: "%+", label: "Recovery time cut" },
+];
+
+function StatTile({
+  value,
+  suffix,
+  label,
+  active,
+  delay,
+}: {
+  value: number;
+  suffix: string;
+  label: string;
+  active: boolean;
+  delay: number;
+}) {
+  const n = useCountUp(value, active, 1500 + delay);
+  return (
+    <div
+      className="rounded-xl border border-[#2c3342] bg-[#14171f] p-4 transition-colors hover:border-[#4a5468]"
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      <div
+        className="font-display text-3xl font-semibold tabular-nums"
+        style={{ color: "var(--amber)" }}
+      >
+        {Math.round(n)}
+        {suffix}
+      </div>
+      <div className="text-xs text-[#7c879a] mt-1">{label}</div>
+    </div>
+  );
+}
+
+function Monogram({ size = 56 }: { size?: number }) {
+  return (
+    <span
+      className="conic-border relative grid place-items-center rounded-full shrink-0"
+      style={{
+        width: size,
+        height: size,
+        background: "#14171f",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.45), 0 0 34px rgba(240,166,64,0.12)",
+      }}
+    >
+      <span
+        className="font-mono font-bold tracking-tight"
+        style={{ fontSize: size * 0.3, color: "var(--amber)" }}
+      >
+        AK
+      </span>
+    </span>
+  );
+}
+
 function About() {
   const { ref, shown } = useReveal();
   return (
@@ -305,12 +535,15 @@ function About() {
               shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}
           >
-            <p
-              className="font-mono text-xs tracking-widest uppercase mb-4"
-              style={{ color: "var(--teal)" }}
-            >
-              01 — About
-            </p>
+            <div className="flex items-center gap-4 mb-6">
+              <Monogram />
+              <div>
+                <Eyebrow>01 — About</Eyebrow>
+                <p className="text-xs text-[#7c879a] -mt-2">
+                  {profile.role} · {profile.location}
+                </p>
+              </div>
+            </div>
             <h2 className="font-display text-4xl sm:text-5xl font-semibold text-cream leading-tight">
               Engineer at the intersection of{" "}
               <span className="italic" style={{ color: "var(--amber)" }}>
@@ -349,23 +582,15 @@ function About() {
               correctness and speed both matter.
             </p>
             <div className="grid grid-cols-3 gap-4 pt-4">
-              {[
-                { n: "45+", l: "Repositories" },
-                { n: "8", l: "Languages" },
-                { n: ">50%", l: "Recovery time cut" },
-              ].map((s) => (
-                <div
-                  key={s.l}
-                  className="rounded-xl border border-[#2c3342] bg-[#14171f] p-4"
-                >
-                  <div
-                    className="font-display text-3xl font-semibold"
-                    style={{ color: "var(--amber)" }}
-                  >
-                    {s.n}
-                  </div>
-                  <div className="text-xs text-[#7c879a] mt-1">{s.l}</div>
-                </div>
+              {aboutStats.map((s, i) => (
+                <StatTile
+                  key={s.label}
+                  value={s.value}
+                  suffix={s.suffix}
+                  label={s.label}
+                  active={shown}
+                  delay={i * 120}
+                />
               ))}
             </div>
           </div>
@@ -375,17 +600,16 @@ function About() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Experience                                                          */
+/* ------------------------------------------------------------------ */
+
 function Experience() {
   const { ref, shown } = useReveal();
   return (
     <section id="experience" ref={ref} className="py-24 sm:py-32">
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
-        <p
-          className="font-mono text-xs tracking-widest uppercase mb-4"
-          style={{ color: "var(--teal)" }}
-        >
-          02 — Experience & Education
-        </p>
+        <Eyebrow>02 — Experience & Education</Eyebrow>
         <h2 className="font-display text-4xl sm:text-5xl font-semibold text-cream mb-14 max-w-2xl">
           Where I've been building.
         </h2>
@@ -396,14 +620,14 @@ function Experience() {
             {experience.map((e, i) => (
               <div
                 key={e.org}
-                className={`relative rounded-2xl border border-[#2c3342] bg-[#14171f] p-6 sm:p-8 transition-all duration-700 ${
+                className={`relative rounded-2xl border border-[#2c3342] bg-[#14171f] p-6 sm:p-8 transition-all duration-700 hover:border-[#4a5468] hover:shadow-[0_20px_45px_-24px_rgba(240,166,64,0.55)] ${
                   shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                 }`}
                 style={{ transitionDelay: `${i * 100}ms` }}
               >
                 <div className="flex items-start gap-4">
                   <span
-                    className="grid place-items-center w-11 h-11 rounded-xl shrink-0 border border-[#2c3342]"
+                    className="grid place-items-center w-11 h-11 rounded-xl shrink-0 border border-[#2c3342] relative"
                     style={{ background: "#191d27" }}
                   >
                     <Briefcase size={19} style={{ color: "var(--amber)" }} />
@@ -446,7 +670,7 @@ function Experience() {
           {/* education + coursework */}
           <div className="space-y-6">
             <div
-              className={`rounded-2xl border border-[#2c3342] bg-[#14171f] p-6 sm:p-8 transition-all duration-700 delay-150 ${
+              className={`rounded-2xl border border-[#2c3342] bg-[#14171f] p-6 sm:p-8 transition-all duration-700 delay-150 hover:border-[#4a5468] ${
                 shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
             >
@@ -477,7 +701,7 @@ function Experience() {
             </div>
 
             <div
-              className={`rounded-2xl border border-[#2c3342] bg-[#14171f] p-6 sm:p-8 transition-all duration-700 delay-200 ${
+              className={`rounded-2xl border border-[#2c3342] bg-[#14171f] p-6 sm:p-8 transition-all duration-700 delay-200 hover:border-[#4a5468] ${
                 shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
             >
@@ -488,7 +712,7 @@ function Experience() {
                 {coursework.map((c) => (
                   <span
                     key={c}
-                    className="px-3 py-1.5 rounded-lg text-sm text-[#b7c0d0] border border-[#2c3342] bg-[#0d0f14]"
+                    className="px-3 py-1.5 rounded-lg text-sm text-[#b7c0d0] border border-[#2c3342] bg-[#0d0f14] hover:border-[#4a5468] hover:text-white transition-colors"
                   >
                     {c}
                   </span>
@@ -502,17 +726,20 @@ function Experience() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Skills                                                              */
+/* ------------------------------------------------------------------ */
+
 function Skills() {
   const { ref, shown } = useReveal();
   return (
-    <section id="skills" ref={ref} className="py-24 sm:py-28 bg-[#14171f] border-y border-[#2c3342]">
+    <section
+      id="skills"
+      ref={ref}
+      className="py-24 sm:py-28 bg-[#14171f] border-y border-[#2c3342]"
+    >
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
-        <p
-          className="font-mono text-xs tracking-widest uppercase mb-4"
-          style={{ color: "var(--teal)" }}
-        >
-          03 — Toolkit
-        </p>
+        <Eyebrow>03 — Toolkit</Eyebrow>
         <h2 className="font-display text-4xl sm:text-5xl font-semibold text-cream mb-14 max-w-2xl">
           Things I build with.
         </h2>
@@ -520,7 +747,7 @@ function Skills() {
           {skills.map((s, i) => (
             <div
               key={s.group}
-              className={`rounded-2xl border border-[#2c3342] bg-[#191d27] p-6 transition-all duration-700 ${
+              className={`rounded-2xl border border-[#2c3342] bg-[#191d27] p-6 transition-all duration-700 hover:border-[#4a5468] ${
                 shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
               style={{ transitionDelay: `${i * 90}ms` }}
@@ -557,58 +784,64 @@ function Skills() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Work                                                                */
+/* ------------------------------------------------------------------ */
+
 function ProjectCard({ p }: { p: Project }) {
   const color = langColors[p.lang] || "#8a9bb0";
   return (
-    <a
-      href={p.url}
-      target="_blank"
-      rel="noreferrer"
-      className="group relative flex flex-col rounded-2xl border border-[#2c3342] bg-[#14171f] p-6 hover:border-[#4a5468] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
-    >
-      {p.highlight && (
-        <span
-          className="absolute top-0 right-0 px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-wider rounded-bl-lg"
-          style={{ background: "var(--amber)", color: "#0d0f14" }}
-        >
-          Featured
-        </span>
-      )}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <h3 className="font-display text-xl font-semibold text-cream group-hover:text-white pr-6">
-          {p.display}
-        </h3>
-        <ArrowUpRight
-          size={18}
-          className="text-[#7c879a] group-hover:text-white transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shrink-0"
-        />
-      </div>
-      <p className="text-sm text-[#b7c0d0] leading-relaxed flex-1">{p.desc}</p>
-      <div className="mt-4 flex flex-wrap gap-1.5">
-        {p.topics.slice(0, 4).map((t) => (
+    <TiltCard className="group h-full">
+      <a
+        href={p.url}
+        target="_blank"
+        rel="noreferrer"
+        className="flex h-full flex-col rounded-2xl border border-[#2c3342] bg-[#14171f] p-6 hover:border-[#4a5468] hover:shadow-[0_20px_45px_-26px_rgba(240,166,64,0.5)] transition-colors duration-300 overflow-hidden"
+      >
+        {p.highlight && (
           <span
-            key={t}
-            className="px-2 py-0.5 rounded text-[11px] font-mono text-[#7c879a] bg-[#0d0f14] border border-[#242a37]"
+            className="absolute top-0 right-0 px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-wider rounded-bl-lg z-20"
+            style={{ background: "var(--amber)", color: "#0d0f14" }}
           >
-            {t}
-          </span>
-        ))}
-      </div>
-      <div className="mt-4 pt-4 border-t border-[#242a37] flex items-center justify-between text-xs">
-        <span className="inline-flex items-center gap-1.5 font-mono text-[#b7c0d0]">
-          <span
-            className="w-2.5 h-2.5 rounded-full"
-            style={{ background: color }}
-          />
-          {p.lang}
-        </span>
-        {p.stars > 0 && (
-          <span className="inline-flex items-center gap-1 text-[#7c879a]">
-            <Star size={12} /> {p.stars}
+            Featured
           </span>
         )}
-      </div>
-    </a>
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <h3 className="font-display text-xl font-semibold text-cream group-hover:text-white pr-6">
+            {p.display}
+          </h3>
+          <ArrowUpRight
+            size={18}
+            className="text-[#7c879a] group-hover:text-white transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shrink-0"
+          />
+        </div>
+        <p className="text-sm text-[#b7c0d0] leading-relaxed flex-1">{p.desc}</p>
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {p.topics.slice(0, 4).map((t) => (
+            <span
+              key={t}
+              className="px-2 py-0.5 rounded text-[11px] font-mono text-[#7c879a] bg-[#0d0f14] border border-[#242a37]"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+        <div className="mt-4 pt-4 border-t border-[#242a37] flex items-center justify-between text-xs">
+          <span className="inline-flex items-center gap-1.5 font-mono text-[#b7c0d0]">
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ background: color }}
+            />
+            {p.lang}
+          </span>
+          {p.stars > 0 && (
+            <span className="inline-flex items-center gap-1 text-[#7c879a]">
+              <Star size={12} /> {p.stars}
+            </span>
+          )}
+        </div>
+      </a>
+    </TiltCard>
   );
 }
 
@@ -622,12 +855,7 @@ function Work() {
   return (
     <section id="work" ref={ref} className="py-24 sm:py-32">
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
-        <p
-          className="font-mono text-xs tracking-widest uppercase mb-4"
-          style={{ color: "var(--teal)" }}
-        >
-          04 — Selected Work
-        </p>
+        <Eyebrow>04 — Selected Work</Eyebrow>
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-10">
           <h2 className="font-display text-4xl sm:text-5xl font-semibold text-cream max-w-xl">
             Projects across the stack.
@@ -645,34 +873,153 @@ function Work() {
             return (
               <button
                 key={c}
+                type="button"
                 onClick={() => setActive(c)}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border transition-all ${
+                className={`relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors ${
                   on
                     ? "text-[#0d0f14] border-transparent"
                     : "text-[#b7c0d0] border-[#2c3342] hover:border-[#4a5468] hover:text-white"
                 }`}
-                style={on ? { background: "var(--amber)" } : undefined}
               >
-                <Icon size={15} />
-                {c}
+                {on && (
+                  <motion.span
+                    layoutId="work-filter"
+                    className="absolute inset-0 rounded-lg"
+                    style={{ background: "var(--amber)" }}
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  />
+                )}
+                <span className="relative z-10 inline-flex items-center gap-1.5">
+                  <Icon size={15} />
+                  {c}
+                </span>
               </button>
             );
           })}
         </div>
 
-        <div
-          className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-5 transition-opacity duration-500 ${
-            shown ? "opacity-100" : "opacity-0"
-          }`}
+        <motion.div
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
+          initial={false}
+          animate={shown ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          {filtered.map((p) => (
-            <ProjectCard key={p.name} p={p} />
+          <AnimatePresence mode="popLayout">
+            {filtered.map((p) => (
+              <motion.div
+                key={p.name}
+                layout
+                initial={{ opacity: 0, scale: 0.94, y: 14 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94 }}
+                viewport={{ once: true, amount: 0.1 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+              >
+                <ProjectCard p={p} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Demos — published, live artifacts                                   */
+/* ------------------------------------------------------------------ */
+
+function Demos() {
+  const { ref, shown } = useReveal();
+  return (
+    <section
+      id="demos"
+      ref={ref}
+      className="py-24 sm:py-28 bg-[#14171f] border-y border-[#2c3342]"
+    >
+      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+        <Eyebrow>05 — Live Artifacts</Eyebrow>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
+          <h2 className="font-display text-4xl sm:text-5xl font-semibold text-cream max-w-xl">
+            Things I published and left running.
+          </h2>
+          <p className="text-sm text-[#7c879a] max-w-xs">
+            Books, sites and experiments that live on GitHub Pages — open any of
+            them, or read the source.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {demos.map((d, i) => (
+            <div
+              key={d.title}
+              className={`group relative flex flex-col rounded-2xl border border-[#2c3342] bg-[#191d27] p-6 transition-all duration-700 hover:-translate-y-1 hover:border-[#4a5468] ${
+                shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
+              style={{ transitionDelay: `${i * 80}ms` }}
+            >
+              <span
+                aria-hidden
+                className="absolute left-0 top-6 bottom-6 w-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ background: d.accent }}
+              />
+              <div className="flex items-start justify-between gap-3">
+                <span
+                  className="grid place-items-center w-10 h-10 rounded-xl border border-[#2c3342] shrink-0"
+                  style={{ background: "#0d0f14" }}
+                >
+                  <Globe size={18} style={{ color: d.accent }} />
+                </span>
+                <div className="flex items-center gap-3 text-[#7c879a]">
+                  <a
+                    href={d.repo}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`${d.title} source`}
+                    className="hover:text-white transition-colors"
+                  >
+                    <Github size={16} />
+                  </a>
+                  <a
+                    href={d.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`${d.title} live site`}
+                    className="hover:text-white transition-colors"
+                  >
+                    <ExternalLink size={16} />
+                  </a>
+                </div>
+              </div>
+
+              <h3 className="font-display text-xl font-semibold text-cream mt-4 group-hover:text-white transition-colors">
+                {d.title}
+              </h3>
+              <p className="text-sm text-[#b7c0d0] leading-relaxed mt-2 flex-1">
+                {d.desc}
+              </p>
+
+              <div className="mt-4 pt-4 border-t border-[#242a37] flex flex-wrap gap-1.5">
+                {d.stack.map((s) => (
+                  <span
+                    key={s}
+                    className="px-2 py-0.5 rounded text-[11px] font-mono text-[#7c879a] bg-[#0d0f14] border border-[#242a37]"
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Contact                                                             */
+/* ------------------------------------------------------------------ */
 
 function Contact() {
   return (
@@ -688,73 +1035,74 @@ function Contact() {
           }}
         />
       </div>
-      <div className="max-w-3xl mx-auto px-5 sm:px-8 text-center">
-        <p
-          className="font-mono text-xs tracking-widest uppercase mb-5"
-          style={{ color: "var(--teal)" }}
-        >
-          05 — Let's talk
-        </p>
-        <h2 className="font-display text-4xl sm:text-6xl font-semibold text-cream leading-tight">
-          Building something that needs to be{" "}
-          <span className="italic" style={{ color: "var(--amber)" }}>
-            fast
-          </span>{" "}
-          and{" "}
-          <span className="italic" style={{ color: "var(--teal)" }}>
-            correct
-          </span>
-          ?
-        </h2>
-        <p className="mt-6 text-lg text-[#b7c0d0]">
-          I'm open to systems, backend and machine-learning engineering
-          opportunities. Let's connect.
-        </p>
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <a
-            href={`mailto:${profile.email}`}
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg font-medium text-[#0d0f14] transition-transform hover:-translate-y-0.5"
-            style={{ background: "var(--cream, #f4efe6)" }}
-          >
-            <Mail size={18} /> {profile.email}
-          </a>
-          <a
-            href={profile.resumePdf}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg font-medium text-white border border-[#2c3342] hover:border-[#4a5468] hover:bg-white/5 transition-colors"
-          >
-            <FileDown size={18} /> Download Résumé
-          </a>
-        </div>
-        <div className="mt-8 flex items-center justify-center gap-5 text-[#7c879a]">
-          <a
-            href={profile.github}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 text-sm hover:text-white transition-colors"
-          >
-            <Github size={16} /> GitHub
-          </a>
-          <a
-            href={profile.linkedin}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 text-sm hover:text-white transition-colors"
-          >
-            <Linkedin size={16} /> LinkedIn
-          </a>
-          <a
-            href={`tel:${profile.phone.replace(/\s/g, "")}`}
-            className="inline-flex items-center gap-2 text-sm hover:text-white transition-colors"
-          >
-            <Phone size={16} /> {profile.phone}
-          </a>
+      <div className="max-w-3xl mx-auto px-5 sm:px-8">
+        <div className="conic-border rounded-3xl bg-[#14171f]/90 backdrop-blur px-6 py-14 sm:px-14 text-center">
+          <Eyebrow>06 — Let's talk</Eyebrow>
+          <h2 className="font-display text-4xl sm:text-6xl font-semibold text-cream leading-tight">
+            Building something that needs to be{" "}
+            <span className="italic" style={{ color: "var(--amber)" }}>
+              fast
+            </span>{" "}
+            and{" "}
+            <span className="italic" style={{ color: "var(--teal)" }}>
+              correct
+            </span>
+            ?
+          </h2>
+          <p className="mt-6 text-lg text-[#b7c0d0]">
+            I'm open to systems, backend and machine-learning engineering
+            opportunities. Let's connect.
+          </p>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <a
+              href={`mailto:${profile.email}`}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg font-medium text-[#0d0f14] transition-transform hover:-translate-y-0.5"
+              style={{ background: "var(--cream, #f4efe6)" }}
+            >
+              <Mail size={18} /> {profile.email}
+            </a>
+            <a
+              href={profile.resumePdf}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg font-medium text-white border border-[#2c3342] hover:border-[#4a5468] hover:bg-white/5 transition-colors"
+            >
+              <FileDown size={18} /> Download Résumé
+            </a>
+          </div>
+          <div className="mt-8 flex items-center justify-center gap-5 text-[#7c879a]">
+            <a
+              href={profile.github}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-sm hover:text-white transition-colors"
+            >
+              <Github size={16} /> GitHub
+            </a>
+            <a
+              href={profile.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-sm hover:text-white transition-colors"
+            >
+              <Linkedin size={16} /> LinkedIn
+            </a>
+            <a
+              href={`tel:${profile.phone.replace(/\s/g, "")}`}
+              className="inline-flex items-center gap-2 text-sm hover:text-white transition-colors"
+            >
+              <Phone size={16} /> {profile.phone}
+            </a>
+          </div>
         </div>
       </div>
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Footer                                                              */
+/* ------------------------------------------------------------------ */
 
 function Footer() {
   return (
@@ -766,6 +1114,7 @@ function Footer() {
         <p className="flex items-center gap-1.5">
           IIIT Bangalore · React + Tailwind
           <span style={{ color: "var(--rust)" }}>✦</span>
+          <LocalClock />
         </p>
         <a
           href={`mailto:${profile.email}`}
@@ -778,20 +1127,27 @@ function Footer() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+
 export default function App() {
   return (
-    <div className="grain min-h-screen bg-[#0d0f14]">
-      <Nav />
-      <main>
-        <Hero />
-        <Marquee />
-        <About />
-        <Experience />
-        <Skills />
-        <Work />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
+    <MotionConfig reducedMotion="user">
+      <div className="grain min-h-screen bg-[#0d0f14]">
+        <CursorGlow />
+        <Nav />
+        <main>
+          <Hero />
+          <Marquee />
+          <About />
+          <Experience />
+          <Skills />
+          <Work />
+          <Demos />
+          <Contact />
+        </main>
+        <Footer />
+        <BackToTop />
+      </div>
+    </MotionConfig>
   );
 }

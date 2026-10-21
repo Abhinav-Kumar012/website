@@ -7,7 +7,12 @@ export type Project = {
   topics: string[];
   url: string;
   homepage?: string;
-  category: "Systems & Backend" | "Machine Learning & NLP" | "Languages & Compilers" | "Data & Databases" | "Learning & Writing";
+  category:
+    | "Systems & Backend"
+    | "Machine Learning & AI"
+    | "Languages & Compilers"
+    | "Data & Databases"
+    | "Learning & Writing";
   highlight?: boolean;
 };
 
@@ -26,7 +31,7 @@ export const profile = {
     "https://github.com/Abhinav-Kumar012/resume/releases/download/latest/Resume.pdf",
   avatar: "https://avatars.githubusercontent.com/u/117056468?v=4",
   stats: {
-    repos: 45,
+    repos: 46,
     followers: 5,
     joined: "2022",
   },
@@ -174,7 +179,7 @@ export const projects: Project[] = [
     stars: 3,
     topics: ["rust", "python", "burn-rs", "deep-learning", "wgpu"],
     url: "https://github.com/Abhinav-Kumar012/Rust_Python_ML_PE",
-    category: "Machine Learning & NLP",
+    category: "Machine Learning & AI",
     highlight: true,
   },
   {
@@ -185,7 +190,7 @@ export const projects: Project[] = [
     stars: 1,
     topics: ["machine-learning", "rust"],
     url: "https://github.com/Abhinav-Kumar012/machine_learning_rs",
-    category: "Machine Learning & NLP",
+    category: "Machine Learning & AI",
   },
   {
     name: "Neural-Machine-Translation",
@@ -195,7 +200,7 @@ export const projects: Project[] = [
     stars: 1,
     topics: ["transformer", "pytorch", "nlp", "machine-translation"],
     url: "https://github.com/Abhinav-Kumar012/Neural-Machine-Translation",
-    category: "Machine Learning & NLP",
+    category: "Machine Learning & AI",
     highlight: true,
   },
   {
@@ -206,7 +211,7 @@ export const projects: Project[] = [
     stars: 2,
     topics: ["machine-learning", "neural-network", "credit-risk-analysis"],
     url: "https://github.com/Abhinav-Kumar012/ML-project",
-    category: "Machine Learning & NLP",
+    category: "Machine Learning & AI",
   },
   {
     name: "mlp_sentiment_xor",
@@ -216,7 +221,7 @@ export const projects: Project[] = [
     stars: 1,
     topics: ["nlp", "pytorch", "sentiment-analysis"],
     url: "https://github.com/Abhinav-Kumar012/mlp_sentiment_xor",
-    category: "Machine Learning & NLP",
+    category: "Machine Learning & AI",
   },
   {
     name: "PL_project",
@@ -342,11 +347,121 @@ export const projects: Project[] = [
     url: "https://github.com/Abhinav-Kumar012/zig_learn",
     category: "Learning & Writing",
   },
+  {
+    name: "spatial_computing_proj",
+    display: "Spatial Computing: Pansharpening",
+    desc: "A vision-transformer approach to multi-objective pansharpening, optimising the accuracy–speed trade-off across a Pareto front published on Hugging Face.",
+    lang: "Python",
+    stars: 2,
+    topics: [
+      "vision-transformer",
+      "nsga-2",
+      "multi-objective-optimization",
+      "machine-learning",
+    ],
+    url: "https://github.com/Abhinav-Kumar012/spatial_computing_proj",
+    homepage: "https://huggingface.co/Vanos007/pansharpening_pareto_front",
+    category: "Machine Learning & AI",
+    highlight: true,
+  },
+  {
+    name: "software_and_system_performance_assignments",
+    display: "Software & System Performance",
+    desc: "Graduate coursework on measuring software and systems performance — profiling, benchmarking and the cost models behind both.",
+    lang: "Python",
+    stars: 2,
+    topics: ["performance-engineering", "benchmarking", "systems"],
+    url: "https://github.com/Abhinav-Kumar012/software_and_system_performance_assignments",
+    category: "Systems & Backend",
+  },
+  {
+    name: "ST_project",
+    display: "Software Testing & Mutation Analysis",
+    desc: "A software-testing project measuring real test-suite strength with mutation testing, integration coverage and unit-test reporting.",
+    lang: "HTML",
+    stars: 2,
+    topics: ["mutation-testing", "coverage-report", "software-testing"],
+    url: "https://github.com/Abhinav-Kumar012/ST_project",
+    category: "Systems & Backend",
+  },
+  {
+    name: "os_lab_hol",
+    display: "OS Lab: System Calls",
+    desc: "Operating-systems lab work built directly on Linux system calls — process control, memory and file-system behaviour.",
+    lang: "C",
+    stars: 1,
+    topics: ["os", "system-calls", "c"],
+    url: "https://github.com/Abhinav-Kumar012/os_lab_hol",
+    category: "Systems & Backend",
+  },
+  {
+    name: "Inventory_Management_System_C_proj",
+    display: "Inventory Management System",
+    desc: "A first-semester systems project in C that tracks stock, picks up data from suppliers and keeps records consistent.",
+    lang: "C",
+    stars: 0,
+    topics: ["c", "systems"],
+    url: "https://github.com/Abhinav-Kumar012/Inventory_Management_System_C_proj",
+    category: "Systems & Backend",
+  },
+  {
+    name: "NoSql-Assingment1",
+    display: "NoSQL Assignment I",
+    desc: "A NoSQL databases assignment working through relational modelling, SQL and PostgreSQL query design.",
+    lang: "SQL",
+    stars: 1,
+    topics: ["postgresql", "sql"],
+    url: "https://github.com/Abhinav-Kumar012/NoSql-Assingment1",
+    category: "Data & Databases",
+  },
+  {
+    name: "imagex_prog2",
+    display: "Image Processing Utilities",
+    desc: "A set of image-processing tools built across TypeScript, C++, Java and an Angular front end.",
+    lang: "TypeScript",
+    stars: 1,
+    topics: ["image-processing", "angular", "cpp", "java"],
+    url: "https://github.com/Abhinav-Kumar012/imagex_prog2",
+    category: "Learning & Writing",
+  },
+  {
+    name: "rust_template",
+    display: "Rust Cargo Workspace Template",
+    desc: "A reusable cargo-workspace skeleton for starting multi-crate Rust projects with shared tooling and CI wired in.",
+    lang: "Rust",
+    stars: 1,
+    topics: ["cargo-workspace", "rust", "rust-lang"],
+    url: "https://github.com/Abhinav-Kumar012/rust_template",
+    category: "Learning & Writing",
+  },
+  {
+    name: "vibe-website",
+    display: "Vibe Website",
+    desc: "A second portfolio experiment — an AI-assisted TypeScript build taken end to end and deployed to GitHub Pages.",
+    lang: "TypeScript",
+    stars: 1,
+    topics: ["ai", "typescript", "github-pages"],
+    url: "https://github.com/Abhinav-Kumar012/vibe-website",
+    homepage: "https://abhinav-kumar012.github.io/vibe-website/",
+    category: "Learning & Writing",
+  },
+  {
+    name: "resume",
+    display: "Résumé Build Pipeline",
+    desc: "A LaTeX résumé kept in sync automatically with Overleaf and rebuilt into a tagged PDF release on every push.",
+    lang: "TeX",
+    stars: 1,
+    topics: ["latex", "github-actions", "pdf-generation"],
+    url: "https://github.com/Abhinav-Kumar012/resume",
+    homepage:
+      "https://github.com/Abhinav-Kumar012/resume/releases/download/latest/Resume.pdf",
+    category: "Learning & Writing",
+  },
 ];
 
 export const categoryOrder: Project["category"][] = [
   "Systems & Backend",
-  "Machine Learning & NLP",
+  "Machine Learning & AI",
   "Languages & Compilers",
   "Data & Databases",
   "Learning & Writing",
@@ -365,4 +480,70 @@ export const langColors: Record<string, string> = {
   HiveQL: "#5fa8a0",
   HTML: "#d16a4e",
   TypeScript: "#4b8bbe",
+  TeX: "#5b8bbd",
+  SQL: "#e38c2a",
 };
+
+/* ------------------------------------------------------------------ */
+/* Live, published artifacts                                           */
+/* ------------------------------------------------------------------ */
+
+export type Demo = {
+  title: string;
+  desc: string;
+  url: string;
+  repo: string;
+  stack: string[];
+  accent: string;
+};
+
+export const demos: Demo[] = [
+  {
+    title: "DSA Book",
+    desc: "A complete data-structures and algorithms book generated by an agentic-AI pipeline and published to GitHub Pages.",
+    url: "https://abhinav-kumar012.github.io/dsa_book/",
+    repo: "https://github.com/Abhinav-Kumar012/dsa_book",
+    stack: ["Python", "Agentic AI", "Markdown"],
+    accent: "var(--amber)",
+  },
+  {
+    title: "Linux Book",
+    desc: "Linux fundamentals and everyday tooling, written by AI and shipped as a live, readable site.",
+    url: "https://abhinav-kumar012.github.io/linux_book/",
+    repo: "https://github.com/Abhinav-Kumar012/linux_book",
+    stack: ["Shell", "AI", "GitHub Pages"],
+    accent: "var(--lime)",
+  },
+  {
+    title: "DSA Book II",
+    desc: "The expanded second volume of the AI-authored algorithms book, with shell-driven tooling around it.",
+    url: "https://abhinav-kumar012.github.io/dsa_book_2/",
+    repo: "https://github.com/Abhinav-Kumar012/dsa_book_2",
+    stack: ["Shell", "AI", "GitHub Pages"],
+    accent: "var(--rust)",
+  },
+  {
+    title: "Linux Book II",
+    desc: "The follow-up volume of the AI-authored Linux book, published live and kept in sync from the repo.",
+    url: "https://abhinav-kumar012.github.io/lb2/",
+    repo: "https://github.com/Abhinav-Kumar012/lb2",
+    stack: ["JavaScript", "GitHub Pages"],
+    accent: "var(--teal)",
+  },
+  {
+    title: "Vibe Website",
+    desc: "A second portfolio experiment — an AI-assisted build taken end to end and deployed to GitHub Pages.",
+    url: "https://abhinav-kumar012.github.io/vibe-website/",
+    repo: "https://github.com/Abhinav-Kumar012/vibe-website",
+    stack: ["TypeScript", "AI", "GitHub Pages"],
+    accent: "var(--amber)",
+  },
+  {
+    title: "This Site",
+    desc: "The page you are reading — React, Tailwind and Framer Motion, deployed straight from the repository.",
+    url: "https://abhinav-kumar012.github.io/website/",
+    repo: "https://github.com/Abhinav-Kumar012/website",
+    stack: ["React", "Tailwind", "Framer Motion"],
+    accent: "var(--rust)",
+  },
+];
